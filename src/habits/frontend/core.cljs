@@ -4,7 +4,7 @@
 (defonce state (atom {:message "Loading..."}))
 
 (defn fetch-test []
-      (-> (js/fetch "/api/test")
+      (-> (js/fetch "http://localhost:3000/api/test")
           (.then #(.json %))
           (.then (fn [data]
                      (swap! state assoc :message (.-message data))))
