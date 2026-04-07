@@ -4,11 +4,17 @@
             [compojure.route :as route]
             [ring.middleware.json :refer [wrap-json-response wrap-json-body]]
             [ring.middleware.cors :refer [wrap-cors]]
-            [cheshire.core :as json]))
+            [habits.backend.db :as db]))
 
 (defroutes app-routes
            (GET "/api/health" [] {:status 200 :body {:status "ok"}})
            (GET "/api/test" [] {:status 200 :body {:message "Hello from Clojure!"}})
+           (GET "/api/users" []
+             (try
+               (let [users (db/execute! "SELECT id, name, created_at FROM users ORDER BY id")]
+                 {:status 200 :body {:users users}})
+               (catch Exception e
+                 {:status 500 :body {:error "Failed to fetch users" :details (.getMessage e)}})))
            (route/not-found {:status 404 :body {:error "Not found"}}))
 
 (defn wrap-base [handler]
