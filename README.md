@@ -1,22 +1,45 @@
 # habits
 
-A Clojure library designed to ... well, that part is up to you.
+A Clojure web-application designed to track daily habits.
 
 ## Usage
 
-FIXME
+Setup env vars for database
+Copy .env-template file to .env and fill secret data
 
-## License
+Create PostgreSQL
+```bash
+docker-compose up -d
+```
 
-Copyright © 2026 FIXME
+Connect to db inside docker container
+```bash
+docker exec -it habits-postgres psql -U {{DB_USER}} -d {{DB_NAME}}
+```
 
-This program and the accompanying materials are made available under the
-terms of the Eclipse Public License 2.0 which is available at
-https://www.eclipse.org/legal/epl-2.0.
+Create new migration
+```bash
+lein migratus create {{NAME}}
+```
+Then edit created files `DATE-name.up.sql` (apply) and `DATE-name.down.sql` (rollback)
 
-This Source Code may also be made available under the following Secondary
-Licenses when the conditions for such availability set forth in the Eclipse
-Public License, v. 2.0 are satisfied: GNU General Public License as published by
-the Free Software Foundation, either version 2 of the License, or (at your
-option) any later version, with the GNU Classpath Exception which is available
-at https://www.gnu.org/software/classpath/license.html.
+Apply migrations
+```bash
+lein migratus migrate  
+```
+
+Run backend
+```bash
+lein run
+```
+Run frontend
+```bash
+npx shadow-cljs watch frontend
+```
+
+## Technologies
+
+- **Backend**: Clojure, Ring, Compojure, next.jdbc, PostgreSQL
+- **Frontend**: ClojureScript, Reagent, shadow-cljs, TailwindCSS
+- **Build**: Leiningen + shadow-cljs + npm
+

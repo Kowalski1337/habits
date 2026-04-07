@@ -43,9 +43,15 @@
 
                  ;; Shadow
                  [thheller/shadow-cljs "3.3.8"]
+
+                 ;; Env
+                 [environ "1.2.0"]
                  ]
 
-  :plugins [[migratus-lein "0.7.2"]]
+  :plugins [
+            [migratus-lein "0.7.2"]
+            [lein-environ "1.2.0"]
+            ]
 
   :shadow-cljs {:builds {:frontend {:target :browser
                                     :output-dir "resources/public/js"
@@ -71,10 +77,6 @@
 
   :migratus {:store :database
              :migration-dir "migrations"
-             :db {:classname "org.postgresql.Driver"
-                  :subprotocol "postgresql"
-                  :subname "//localhost:5432/habit_tracker"
-                  :user "postgres"
-                  :password "postgres"}}
+             :db {:connection-uri "jdbc:postgresql://localhost:5432/habits_dev?user=postgres&password=postgres"}}
   :repl-options {:init-ns habits.core}
   )

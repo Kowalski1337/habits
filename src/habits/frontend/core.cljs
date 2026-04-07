@@ -13,7 +13,7 @@
                       (swap! state assoc :message (str "Error: " err))))))
 
 (defn app []
-  (let [state @state]  ;; ← читаем атом один раз в начале
+  (let [state @state]
     [:div.container.mx-auto.p-8
      [:h1.text-3xl.font-bold.text-blue-600 "Habit Tracker"]
      [:p.mt-4 "Message from server: " (:message state)]
