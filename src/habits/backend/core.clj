@@ -5,11 +5,11 @@
             [ring.middleware.json :refer [wrap-json-response wrap-json-body]]
             [ring.middleware.cors :refer [wrap-cors]]
             [habits.backend.service.users-service :as users-service]
+            [habits.backend.service.auth-service :as auth-service]
             [habits.backend.service.habits-service :as habits-service]))
 
 (defroutes app-routes
            (GET "/api/health" [] {:status 200 :body {:status "ok"}})
-           (GET "/api/test" [] {:status 200 :body {:message "Hello from Clojure!"}})
 
            (GET "/api/users" [] users-service/get-all-users)
            (GET "/api/users/:id" [id] #(users-service/get-user-by-id % id))
@@ -19,6 +19,8 @@
            (POST "/api/habits" [] habits-service/create-habit!)
            (PATCH "/api/habits/:id" [id] #(habits-service/update-habit! % id))
            (DELETE "/api/habits/:id" [id] habits-service/delete-habit! id)
+
+           (POST "/api/auth/login" [] auth-service/login-or-register!)
 
            (route/not-found {:status 404 :body {:error "Not found"}}))
 

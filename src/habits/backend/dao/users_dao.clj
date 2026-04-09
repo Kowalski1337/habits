@@ -21,12 +21,27 @@
     (catch Exception e
       (error :database-error "Failed to fetch user" {:cause (.getMessage e)}))))
 
-(defn create-user!
+(defn find-user-by-name
   [name]
   (try
+    (let [res (db/execute!
+                 "SELECT id, name, password_hash, created_at
+                  FROM users
+                  WHERE name = ?"
+                 name)
+          user (first res)]
+      (if user
+        (success user)
+        (error :not-found "User not found" {:user-name name})))
+    (catch Exception e
+      (error :database-error "Failed to fetch user" {:cause (.getMessage e)}))))
+
+(defn create-user!
+  [name password-hash]
+  (try
     (let [result (db/execute!
-                   "INSERT INTO users (name) VALUES (?) RETURNING id"
-                   name)
+                   "INSERT INTO users (name, password_hash) VALUES (?, ?) RETURNING id"
+                   name, password-hash)
           user-id (-> result first :users/id)]
       (success {:id user-id :name name}))
     (catch Exception e
