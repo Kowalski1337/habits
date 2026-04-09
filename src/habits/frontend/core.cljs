@@ -17,11 +17,10 @@
                  (.json response)
                  (throw (js/Error. (str "HTTP " (.-status response)))))))
       (.then (fn [data]
-               (let [clj-data (js->clj data :keywordize-keys true)
-                     users (get clj-data :users)]
+               (let [users-array (js->clj data :keywordize-keys true)]
                  (swap! app-state assoc
-                        :users users
-                        :message (str "Found " (count users) " users")
+                        :users users-array
+                        :message (str "Found " (count users-array) " users")
                         :loading? false))))
       (.catch (fn [err]
                 (swap! app-state assoc

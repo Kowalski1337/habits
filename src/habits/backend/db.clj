@@ -1,6 +1,5 @@
 (ns habits.backend.db
-  (:require [next.jdbc :as jdbc]
-            [environ.core :refer [env]])
+  (:require [next.jdbc :as jdbc])
   (:import [com.zaxxer.hikari HikariConfig HikariDataSource]))
 
 (defn env
@@ -45,3 +44,7 @@
     (catch Exception e
       (println "Database error:" (.getMessage e))
       (throw e))))
+
+(defn get-one
+  [sql & params]
+  (first (execute! sql params)))
