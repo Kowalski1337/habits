@@ -40,5 +40,5 @@
   (with-db-error "Failed to delete habit"
     (let [rows-affected (db/execute! "DELETE FROM habits WHERE id = ?" habit-id)]
       (if (empty? rows-affected)
-        (error :not-found "Habit not found" {:habit-id habit-id})
+        (error :not-found "Habit not found" {:id habit-id})
         (success {:id habit-id :deleted true})))))

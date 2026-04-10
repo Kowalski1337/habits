@@ -10,7 +10,7 @@
   (with-db-error "Failed to fetch user"
     (if-let [user (db/get-one "SELECT id, name, created_at FROM users WHERE id = ?" user-id)]
       (success user)
-      (error :not-found "User not found" {:user-id user-id}))))
+      (error :not-found "User not found" {:id user-id}))))
 
 (defn find-user-by-name [name]
   (with-db-error "Failed to fetch user"
