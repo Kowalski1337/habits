@@ -1,38 +1,31 @@
 (ns habits.backend.dao.habits-dao
-  (:require [habits.backend.db :as db]
-            [habits.backend.dao.dao-response :refer [success, error]]))
+  (:require [habits.backend.dao.dao-utils :refer [error success with-db-error]]
+            [habits.backend.db :as db]))
 
 (defn create-habit!
   [user-id title description color]
-  (try
-    (let [result (db/execute!
-                   "INSERT INTO habits (user_id, title, description, color)
+  (with-db-error "Failed to create habit"
+    (success (db/get-one
+               "INSERT INTO habits (user_id, title, description, color)
                    VALUES (?, ?, ?, ?)
                    RETURNING id, title, description, color, created_at, order_index"
-                   user-id title description color)
-          habit (first result)]
-      (success habit))
-    (catch Exception e
-      (error :database-error "Failed to create habit" {:cause (.getMessage e)}))))
+               user-id title description color))))
 
 (defn get-user-habits
   [user-id]
-  (try
-    (let [habits (db/execute!
-                   "SELECT id, title, description, color, created_at, order_index
+  (with-db-error "Failed to fetch habits"
+    (success (db/execute!
+               "SELECT id, title, description, color, created_at, order_index
                     FROM habits
                     WHERE user_id = ?
                     ORDER BY order_index, created_at"
-                   user-id)]
-      (success habits))
-    (catch Exception e
-      (error :database-error "Failed to fetch habits" {:cause (.getMessage e)}))))
+               user-id))))
 
 (defn update-habit!
   [habit-id title description color order-index]
-  (try
-    (let [result (db/execute!
-                   "UPDATE habits
+  (with-db-error "Failed to update habit"
+    (success (db/get-one
+               "UPDATE habits
                     SET title = COALESCE(?, title),
                         description = COALESCE(?, description),
                         color = COALESCE(?, color),
@@ -40,18 +33,12 @@
                         updated_at = CURRENT_TIMESTAMP
                     WHERE id = ?
                     RETURNING id, title, description, color, order_index, user_id, created_at"
-                   title description color order-index habit-id)
-          updated-habit (first result)]
-      (success updated-habit))
-    (catch Exception e
-      (error :database-error "Failed to update habit" {:cause (.getMessage e)}))))
+               title description color order-index habit-id))))
 
 (defn delete-habit!
   [habit-id]
-  (try
+  (with-db-error "Failed to delete habit"
     (let [rows-affected (db/execute! "DELETE FROM habits WHERE id = ?" habit-id)]
-      (if (zero? (count rows-affected))
+      (if (empty? rows-affected)
         (error :not-found "Habit not found" {:habit-id habit-id})
-        (success {:id habit-id :deleted true})))
-    (catch Exception e
-      (error :database-error "Failed to delete habit" {:cause (.getMessage e)}))))
+        (success {:id habit-id :deleted true})))))

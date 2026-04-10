@@ -1,7 +1,9 @@
 (ns habits.backend.db
-  (:require [next.jdbc :as jdbc])
+  (:require [next.jdbc :as jdbc]
+            [next.jdbc.result-set :as rs])
   (:import (com.zaxxer.hikari HikariConfig HikariDataSource)))
 
+;; TODO use environ
 (defn env
   ([key]
    (System/getenv key))
@@ -16,16 +18,18 @@
    :user     (env "DB_USER" "postgres")
    :password (env "DB_PASSWORD" "postgres")})
 
+(def jdbc-opts {:builder-fn rs/as-unqualified-maps})
+
 (defn make-datasource []
-  (let [config (HikariConfig.)]
-    (.setJdbcUrl config (str "jdbc:postgresql://" (:host db-spec) ":" (:port db-spec) "/" (:dbname db-spec)))
-    (.setUsername config (:user db-spec))
-    (.setPassword config (:password db-spec))
-    (.setMaximumPoolSize config 10)
-    (.setMinimumIdle config 2)
-    (.setConnectionTimeout config 30000)
-    (.setIdleTimeout config 600000)
-    (HikariDataSource. config)))
+  (HikariDataSource.
+    (doto (HikariConfig.)
+      (.setJdbcUrl (str "jdbc:postgresql://" (:host db-spec) ":" (:port db-spec) "/" (:dbname db-spec)))
+      (.setUsername (:user db-spec))
+      (.setPassword (:password db-spec))
+      (.setMaximumPoolSize 10)
+      (.setMinimumIdle 2)
+      (.setConnectionTimeout 30000)
+      (.setIdleTimeout 600000))))
 
 (defonce datasource
          (delay
@@ -37,23 +41,14 @@
                (println "Failed to create datasource:" (.getMessage e))
                (throw e)))))
 
-(defn strip-prefix [m]
-  (reduce-kv (fn [acc k v]
-               (let [clean-k (if (keyword? k)
-                               (-> k name (clojure.string/replace #".*/" "") keyword)
-                               k)]
-                 (assoc acc clean-k v)))
-             {}
-             m))
-
 (defn execute!
   [sql & params]
   (try
-    (map strip-prefix (jdbc/execute! @datasource (into [sql] params)))
+    (jdbc/execute! @datasource (into [sql] params) jdbc-opts)
     (catch Exception e
       (println "Database error:" (.getMessage e))
       (throw e))))
 
 (defn get-one
   [sql & params]
-  (first (execute! sql params)))
+  (first (apply execute! sql params)))
