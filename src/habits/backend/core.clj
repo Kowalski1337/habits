@@ -17,7 +17,7 @@
            (GET "/api/habits" [] habits-service/get-user-habits)
            (POST "/api/habits" [] habits-service/create-habit!)
            (PATCH "/api/habits/:id" [id] #(habits-service/update-habit! % id))
-           (DELETE "/api/habits/:id" [id] habits-service/delete-habit! id)
+           (DELETE "/api/habits/:id" [id] #(habits-service/delete-habit! % id))
 
            (POST "/api/auth/login" [] auth-service/login-or-register!)
 
@@ -28,7 +28,7 @@
       wrap-json-response
       (wrap-json-body {:keywords? true})
       (wrap-cors :access-control-allow-origin #".*"
-                 :access-control-allow-methods [:get :post :put :delete :options])))
+                 :access-control-allow-methods [:get :post :put :delete :options :patch])))
 
 (defn -main []
   (println "Starting server on port 3000...")

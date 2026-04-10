@@ -6,14 +6,12 @@
   [user-id title description color]
   (try
     (let [result (db/execute!
-                   "INSERT INTO habits (user_id, title, description, color) VALUES (?, ?, ?, ?) RETURNING id"
+                   "INSERT INTO habits (user_id, title, description, color)
+                   VALUES (?, ?, ?, ?)
+                   RETURNING id, title, description, color, created_at, order_index"
                    user-id title description color)
-          habit-id (-> result first :habits/id)]
-      (success {:id                  habit-id
-                        :title       title
-                        :description description
-                        :color       color
-                        :user-id     user-id}))
+          habit (first result)]
+      (success habit))
     (catch Exception e
       (error :database-error "Failed to create habit" {:cause (.getMessage e)}))))
 

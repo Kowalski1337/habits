@@ -1,6 +1,6 @@
 (ns habits.backend.db
   (:require [next.jdbc :as jdbc])
-  (:import [com.zaxxer.hikari HikariConfig HikariDataSource]))
+  (:import (com.zaxxer.hikari HikariConfig HikariDataSource)))
 
 (defn env
   ([key]
@@ -9,11 +9,11 @@
    (or (System/getenv key) default)))
 
 (def db-spec
-  {:dbtype "postgresql"
-   :dbname (env "DB_NAME" "habits_dev")
-   :host (env "DB_HOST" "localhost")
-   :port (Integer/parseInt (env "DB_PORT" "5432"))
-   :user (env "DB_USER" "postgres")
+  {:dbtype   "postgresql"
+   :dbname   (env "DB_NAME" "habits_dev")
+   :host     (env "DB_HOST" "localhost")
+   :port     (Integer/parseInt (env "DB_PORT" "5432"))
+   :user     (env "DB_USER" "postgres")
    :password (env "DB_PASSWORD" "postgres")})
 
 (defn make-datasource []
@@ -37,10 +37,19 @@
                (println "Failed to create datasource:" (.getMessage e))
                (throw e)))))
 
+(defn strip-prefix [m]
+  (reduce-kv (fn [acc k v]
+               (let [clean-k (if (keyword? k)
+                               (-> k name (clojure.string/replace #".*/" "") keyword)
+                               k)]
+                 (assoc acc clean-k v)))
+             {}
+             m))
+
 (defn execute!
   [sql & params]
   (try
-    (jdbc/execute! @datasource (into [sql] params))
+    (map strip-prefix (jdbc/execute! @datasource (into [sql] params)))
     (catch Exception e
       (println "Database error:" (.getMessage e))
       (throw e))))
