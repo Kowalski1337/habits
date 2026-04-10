@@ -9,7 +9,7 @@
    :color       "#3B82F6"
    :show-form?  false})
 
-(defn add-habit-form [user-id]
+(defn add-habit-form []
   (let [form-state (r/atom initial-form-state)]
     (fn []
       [:div.mb-6
@@ -47,8 +47,7 @@
            [:button.bg-green-500.text-white.px-4.py-2.rounded.hover:bg-green-600
             {:on-click (fn []
                          (when-not (str/blank? (:title @form-state))
-                           (api/create-habit! user-id
-                                              (:title @form-state)
+                           (api/create-habit! (:title @form-state)
                                               (:description @form-state)
                                               (:color @form-state))
                            (reset! form-state initial-form-state)))}
@@ -61,26 +60,26 @@
           {:on-click #(swap! form-state assoc :show-form? true)}
           "+ Add New Habit"])])))
 
-(defn habit-item [habit user-id]
+(defn habit-item [habit]
   (let [editing?   (r/atom false)
         edit-title (r/atom (:title habit))]
-    (fn [habit user-id]
+    (fn [habit]
       [:li.border-b.p-3.hover:bg-gray-50
        (if @editing?
          [:div
           [:input.w-full.px-2.py-1.border.rounded
-           {:type        "text"
-            :value       @edit-title
-            :auto-focus  true
-            :on-change   #(reset! edit-title (-> % .-target .-value))
+           {:type         "text"
+            :value        @edit-title
+            :auto-focus   true
+            :on-change    #(reset! edit-title (-> % .-target .-value))
             :on-key-press (fn [e]
                             (when (= "Enter" (.-key e))
-                              (api/update-habit! user-id (:id habit) {:title @edit-title})
+                              (api/update-habit! (:id habit) {:title @edit-title})
                               (reset! editing? false)))}]
           [:div.flex.gap-2.mt-2
            [:button.text-sm.bg-green-500.text-white.px-3.py-1.rounded
             {:on-click (fn []
-                         (api/update-habit! user-id (:id habit) {:title @edit-title})
+                         (api/update-habit! (:id habit) {:title @edit-title})
                          (reset! editing? false))}
             "Save"]
            [:button.text-sm.bg-gray-300.text-gray-700.px-3.py-1.rounded
@@ -101,10 +100,10 @@
                             (reset! editing? true))}
             "Edit"]
            [:button.text-red-500.hover:text-red-700.text-sm
-            {:on-click #(api/delete-habit! user-id (:id habit))}
+            {:on-click #(api/delete-habit! (:id habit))}
             "Delete"]]])])))
 
-(defn habits-list [user-id]
+(defn habits-list []
   (let [habits @api/habits-state]
     (cond
       (:loading? habits)
@@ -120,12 +119,12 @@
       [:ul.divide-y.divide-gray-200
        (for [habit (:habits habits)]
          ^{:key (:id habit)}
-         [habit-item habit user-id])])))
+         [habit-item habit])])))
 
-(defn habits-page [user-id]
-  (r/with-let [_ (api/fetch-habits! user-id)]
+(defn habits-page []
+  (r/with-let [_ (api/fetch-habits!)]
               [:div
-               [add-habit-form user-id]
+               [add-habit-form]
                [:div.mt-6
                 [:h2.text-xl.font-semibold.mb-3 "My Habits"]
-                [habits-list user-id]]]))
+                [habits-list]]]))

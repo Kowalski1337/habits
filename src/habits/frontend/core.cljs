@@ -19,7 +19,7 @@
        [:div
         [user-panel]
         [:h1.text-3xl.font-bold.text-center.mb-8 "Habits Tracker"]
-        [habits/habits-page (:id current-user)]]
+        [habits/habits-page]]
        [auth/auth-form])]))
 
 (defn init []
