@@ -37,7 +37,7 @@
   (let [user-id (get-user-id req)
         habit-id-int (parse-id habit-id)
         {:keys       [title description color]
-         order-index :order_index} (:body req)]
+         order-index :order-index} (:body req)]
     (cond
       (resp/error? user-id)
       user-id
@@ -47,7 +47,7 @@
 
       (every? nil? [title description color order-index])
       (resp/bad-request "At least one field must be provided for update"
-                        {:allowed-fields [:title :description :color :order_index]})
+                        {:allowed-fields [:title :description :color :order-index]})
 
       :else
       (handle-result "Habit" (dao/update-habit! habit-id-int title description color order-index)

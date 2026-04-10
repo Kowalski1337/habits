@@ -1,19 +1,32 @@
 (ns habits.backend.service.auth-service
   (:require [buddy.hashers :as hashers]
+            [clojure.string :as str]
             [habits.backend.dao.users-dao :as users-dao]
             [habits.backend.response :as resp]))
 
+(defn- blank-field? [v]
+  (or (nil? v) (str/blank? v)))
+
+(defn- login! [user password]
+  (if (hashers/check password (:password-hash user))
+    (resp/success {:user user :message "Login successful"})
+    (resp/unauthorized "Invalid password or name already taken")))
+
+(defn- register! [name password]
+  (let [result (users-dao/create-user! name (hashers/derive password))]
+    (if (:success result)
+      (resp/success {:user (:data result) :message "User created and logged in"})
+      (resp/server-error "Failed to create user"))))
+
 (defn login-or-register!
   [req]
-  (let [body (:body req)
-        name (:name body)
-        password (:password body)]
+  (let [{:keys [name password]} (:body req)]
 
     (cond
-      (or (nil? name) (clojure.string/blank? name))
+      (blank-field? name)
       (resp/bad-request "Name is required" {:field "name"})
 
-      (or (nil? password) (clojure.string/blank? password))
+      (blank-field? password)
       (resp/bad-request "Password is required" {:field "password"})
 
       (< (count password) 3)
@@ -22,16 +35,5 @@
       :else
       (let [find-result (users-dao/find-user-by-name name)]
         (if (:success find-result)
-          (let [user (:data find-result)
-                password-hash (:password_hash user)]
-            (if (hashers/check password password-hash)
-              (resp/success {:user user
-                             :message "Login successful"})
-              (resp/unauthorized "Invalid password or name already taken")))
-
-          (let [password-hash (hashers/derive password)
-                create-result (users-dao/create-user! name password-hash)]
-            (if (:success create-result)
-              (resp/success {:user (:data create-result)
-                             :message "User created and logged in"})
-              (resp/server-error "Failed to create user"))))))))
+          (-> find-result :data (login! password))
+          (register! name password))))))

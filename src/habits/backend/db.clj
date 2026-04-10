@@ -18,7 +18,8 @@
    :user     (env "DB_USER" "postgres")
    :password (env "DB_PASSWORD" "postgres")})
 
-(def jdbc-opts {:builder-fn rs/as-unqualified-maps})
+(def jdbc-opts
+  {:builder-fn rs/as-unqualified-kebab-maps})
 
 (defn make-datasource []
   (HikariDataSource.
