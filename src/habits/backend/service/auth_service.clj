@@ -1,6 +1,7 @@
 (ns habits.backend.service.auth-service
   (:require [buddy.hashers :as hashers]
             [habits.backend.dao.users-dao :as users-dao]
+            [habits.backend.entity.user-entity :as entity]
             [habits.backend.response :as resp]))
 
 (defn login-or-register!
@@ -25,13 +26,13 @@
           (let [user (:data find-result)
                 password-hash (:users/password_hash user)]
             (if (hashers/check password password-hash)
-              (resp/success {:user (dissoc user :users/password_hash)
+              (resp/success {:user (entity/build user)
                              :message "Login successful"})
               (resp/unauthorized "Invalid password or name already taken")))
 
           (let [password-hash (hashers/derive password)
                 create-result (users-dao/create-user! name password-hash)]
             (if (:success create-result)
-              (resp/success {:user (:data create-result)
+              (resp/success {:user (-> create-result :data entity/build)
                              :message "User created and logged in"})
               (resp/server-error "Failed to create user"))))))))

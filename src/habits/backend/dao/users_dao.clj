@@ -40,9 +40,9 @@
   [name password-hash]
   (try
     (let [result (db/execute!
-                   "INSERT INTO users (name, password_hash) VALUES (?, ?) RETURNING id"
+                   "INSERT INTO users (name, password_hash) VALUES (?, ?) RETURNING id, name"
                    name, password-hash)
-          user-id (-> result first :users/id)]
-      (success {:id user-id :name name}))
+          user (first result)]
+      (success user))
     (catch Exception e
       (error :database-error "Failed to create user" {:cause (.getMessage e)}))))

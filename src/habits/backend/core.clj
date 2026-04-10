@@ -13,7 +13,6 @@
 
            (GET "/api/users" [] users-service/get-all-users)
            (GET "/api/users/:id" [id] #(users-service/get-user-by-id % id))
-           (POST "/api/users" [] users-service/create-user!)
 
            (GET "/api/habits" [] habits-service/get-user-habits)
            (POST "/api/habits" [] habits-service/create-habit!)
