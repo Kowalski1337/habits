@@ -1,12 +1,12 @@
 (ns habits.frontend.habits
   (:require [clojure.string :as str]
             [reagent.core :as r]
-            [habits.frontend.habits-api :as api]))
+            [habits.frontend.habits-api :as api]
+            [habits.frontend.calendar :as calendar]))
 
 (def ^:private initial-form-state
   {:title       ""
    :description ""
-   :color       "#3B82F6"
    :show-form?  false})
 
 (defn add-habit-form []
@@ -77,10 +77,7 @@
 
          [:div.flex.justify-between.items-center
           [:div.flex-1
-           [:div.flex.items-center.gap-2
-            [:div.w-3.h-3.rounded-full
-             {:style {:background-color (:color habit)}}]
-            [:span.font-medium (:title habit)]]
+           [:span.font-medium (:title habit)]
            (when (:description habit)
              [:p.text-sm.text-gray-500.mt-1 (:description habit)])]
           [:div.flex.gap-2
@@ -112,8 +109,12 @@
 
 (defn habits-page []
   (r/with-let [_ (api/fetch-habits!)]
-              [:div
-               [add-habit-form]
-               [:div.mt-6
+              [:div.flex.gap-6.items-start
+               ;; левая колонка — менеджер привычек
+               [:div.w-80.flex-shrink-0
                 [:h2.text-xl.font-semibold.mb-3 "My Habits"]
-                [habits-list]]]))
+                [add-habit-form]
+                [habits-list]]
+               ;; правая колонка — календарь
+               [:div.flex-1
+                [calendar/calendar]]]))
