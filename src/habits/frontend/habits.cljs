@@ -33,23 +33,12 @@
              :placeholder "Describe your habit..."
              :on-change   #(swap! form-state assoc :description (-> % .-target .-value))}]]
 
-          [:div.mb-3
-           [:label.block.text-sm.font-medium.mb-1 "Color"]
-           [:div.flex.gap-2
-            (for [color ["#3B82F6" "#EF4444" "#10B981" "#F59E0B" "#8B5CF6" "#EC4899"]]
-              ^{:key color}
-              [:div.w-8.h-8.rounded-full.cursor-pointer.border-2
-               {:style    {:background-color color
-                           :border-color     (if (= color (:color @form-state)) "#000" "#ccc")}
-                :on-click #(swap! form-state assoc :color color)}])]]
-
           [:div.flex.gap-2
            [:button.bg-green-500.text-white.px-4.py-2.rounded.hover:bg-green-600
             {:on-click (fn []
                          (when-not (str/blank? (:title @form-state))
                            (api/create-habit! (:title @form-state)
-                                              (:description @form-state)
-                                              (:color @form-state))
+                                              (:description @form-state))
                            (reset! form-state initial-form-state)))}
             "Save"]
            [:button.bg-gray-300.text-gray-700.px-4.py-2.rounded.hover:bg-gray-400

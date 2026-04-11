@@ -4,6 +4,12 @@
   :license {:name "EPL-2.0 OR GPL-2.0-or-later WITH Classpath-exception-2.0"
             :url "https://www.eclipse.org/legal/epl-2.0/"}
   :repositories [["clojars" "https://repo.clojars.org/"]]
+  :jvm-opts ["-Dfile.encoding=UTF-8"
+             "-Dconsole.encoding=UTF-8"
+             "-Dsun.stdout.encoding=UTF-8"
+             "-Dsun.stderr.encoding=UTF-8"
+             "-Duser.language=en"
+             "-Duser.country=US"]
   :dependencies [[org.clojure/clojure "1.12.2"]
                  [org.clojure/clojurescript "1.11.132"]
 

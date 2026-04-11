@@ -35,14 +35,13 @@
                       :loading? false)))
       (.catch handle-error!)))
 
-(defn create-habit! [title description color]
+(defn create-habit! [title description]
   (swap! habits-state assoc :loading? true :error nil)
   (-> (js/fetch (str config/api-url "/api/habits")
                 #js{:method  "POST"
                     :headers (auth-headers-json)
                     :body    (js/JSON.stringify (clj->js {:title       title
-                                                          :description description
-                                                          :color       color}))})
+                                                          :description description}))})
       (.then http/check-response!)
       (.then (fn [new-habit]
                (swap! habits-state

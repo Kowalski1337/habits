@@ -15,7 +15,7 @@
 
 (defn create-habit! [req]
   (let [user-id (get-user-id req)
-        {:keys [title description color]} (:body req)]
+        {:keys [title description]} (:body req)]
     (cond
       (resp/error? user-id)
       user-id
@@ -24,8 +24,8 @@
       (resp/bad-request "Title is required" {:field "title"})
 
       :else
-      (handle-result "Habit" (dao/create-habit! user-id title description color)
-                           resp/created))))
+      (handle-result "Habit" (dao/create-habit! user-id title description)
+                     resp/created))))
 
 (defn get-user-habits [req]
   (let [user-id (get-user-id req)]
@@ -36,8 +36,7 @@
 (defn update-habit! [req habit-id]
   (let [user-id (get-user-id req)
         habit-id-int (parse-id habit-id)
-        {:keys       [title description color]
-         order-index :order-index} (:body req)]
+        {:keys [title description]} (:body req)]
     (cond
       (resp/error? user-id)
       user-id
@@ -45,13 +44,12 @@
       (nil? habit-id-int)
       (resp/bad-request "Invalid habit-id" {:habit-id habit-id})
 
-      (every? nil? [title description color order-index])
+      (every? nil? [title description])
       (resp/bad-request "At least one field must be provided for update"
-                        {:allowed-fields [:title :description :color :order-index]})
+                        {:allowed-fields [:title :description]})
 
       :else
-      (handle-result "Habit" (dao/update-habit! habit-id-int title description color order-index)
-                           resp/success))))
+      (handle-result "Habit" (dao/update-habit! habit-id-int title description) resp/success))))
 
 (defn delete-habit! [req habit-id]
   (let [user-id (get-user-id req)
@@ -65,4 +63,4 @@
 
       :else
       (handle-result "Habit" (dao/delete-habit! habit-id-int)
-                           (fn [_] (resp/no-content))))))
+                     (fn [_] (resp/no-content))))))

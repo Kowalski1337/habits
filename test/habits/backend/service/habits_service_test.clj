@@ -33,8 +33,8 @@
 (deftest create-habit-test
   (testing "Create valid"
     (with-redefs [habits.backend.dao.habits-dao/create-habit!
-                  (fn [_ title _ _] {:success true :data {:id 1 :title title}})]
-      (let [resp (sut/create-habit! (make-req 42 {:title "Run" :color "#fff"}))]
+                  (fn [_ title _] {:success true :data {:id 1 :title title}})]
+      (let [resp (sut/create-habit! (make-req 42 {:title "Run"}))]
         (is (= 201 (:status resp)))
         (is (= "Run" (:title (:body resp)))))))
 
@@ -57,7 +57,7 @@
 (deftest update-habit-test
   (testing "Update title"
     (with-redefs [habits.backend.dao.habits-dao/update-habit!
-                  (fn [_ title _ _ _] {:success true :data {:id 1 :title title}})]
+                  (fn [_ title _ ] {:success true :data {:id 1 :title title}})]
       (let [resp (sut/update-habit! (make-req 42 {:title "New title"}) "1")]
         (is (= 200 (:status resp))))))
 

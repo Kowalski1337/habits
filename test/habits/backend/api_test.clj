@@ -40,7 +40,7 @@
 (def ^:private mock-user-name "Elochka")
 
 (def ^:private mock-habit
-  {:id 1 :title "Run" :description "Morning run" :color "#3B82F6" :order-index 0})
+  {:id 1 :title "Run" :description "Morning run"})
 
 (def ^:private mock-user
   {:id 1 :name mock-user-name})
@@ -79,13 +79,13 @@
     (with-redefs [habits-dao/create-habit!
                   (fn [& _] {:success true :data mock-habit})]
       (let [resp (handler (post-req "/api/habits"
-                                    {:title "Run" :color "#3B82F6"}
+                                    {:title "Run"}
                                     :user-id 1))]
         (is (= 201 (status resp)))
         (is (= (:title mock-habit) (:title (parse-body resp)))))))
 
   (testing "Missing title"
-    (let [resp (handler (post-req "/api/habits" {:color "#fff"} :user-id 1))]
+    (let [resp (handler (post-req "/api/habits" {} :user-id 1))]
       (is (= 400 (status resp)))))
 
   (testing "Empty title"
