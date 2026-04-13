@@ -4,9 +4,11 @@
             [compojure.route :as route]
             [ring.middleware.cors :refer [wrap-cors]]
             [ring.middleware.json :refer [wrap-json-body wrap-json-response]]
+            [ring.middleware.params :refer [wrap-params]]
             [habits.backend.service.auth-service :as auth-service]
             [habits.backend.service.habits-service :as habits-service]
-            [habits.backend.service.users-service :as users-service]))
+            [habits.backend.service.users-service :as users-service]
+            [habits.backend.service.habit-logs-service :as habit-logs-service]))
 
 (defroutes app-routes
            (GET    "/api/users"        req (users-service/get-all-users req))
@@ -19,12 +21,16 @@
 
            (POST   "/api/auth/login"   req (auth-service/login-or-register! req))
 
+           (GET  "/api/habits/logs"        req (habit-logs-service/get-logs-for-month req))
+           (POST "/api/habits/:id/logs"    [id :as req] (habit-logs-service/upsert-log! req id))
+
            (route/not-found {:error "Not found"}))
 
 (defn wrap-base [handler]
   (-> handler
       wrap-json-response
       (wrap-json-body {:keywords? true})
+      wrap-params
       (wrap-cors :access-control-allow-origin  #".*"
                  :access-control-allow-methods [:get :post :put :delete :options :patch])))
 

@@ -4,9 +4,12 @@
             [habits.backend.core :refer [app-routes wrap-base]]
             [habits.backend.dao.habits-dao :as habits-dao]
             [habits.backend.dao.users-dao :as users-dao]
+            [habits.backend.dao.habit-logs-dao :as habit-logs-dao]
             [ring.mock.request :as mock]))
 
 (def ^:private handler (wrap-base app-routes))
+(def ^:private mock-log
+  {:id 1 :habit-id 1 :date "2026-04-13" :completed true :emotion-color "#10B981"})
 
 (defn- get-req [url & {:keys [user-id]}]
   (cond-> (mock/request :get url)
@@ -212,3 +215,104 @@
   (testing "Unknown rout"
     (let [resp (handler (get-req "/api/nonexistent"))]
       (is (= 404 (status resp))))))
+
+
+(deftest get-habit-logs-test
+  (testing "Get logs for valid month"
+    (with-redefs [habit-logs-dao/get-logs-for-month
+                  (fn [& _] {:success true :data [mock-log]})]
+      (let [resp (handler (get-req "/api/habits/logs?year=2026&month=4" :user-id 1))]
+        (is (= 200 (status resp)))
+        (is (= [mock-log] (parse-body resp))))))
+
+  (testing "Empty logs for month"
+    (with-redefs [habit-logs-dao/get-logs-for-month
+                  (fn [& _] {:success true :data []})]
+      (let [resp (handler (get-req "/api/habits/logs?year=2026&month=4" :user-id 1))]
+        (is (= 200 (status resp)))
+        (is (= [] (parse-body resp))))))
+
+  (testing "User id is missing"
+    (let [resp (handler (get-req "/api/habits/logs?year=2026&month=4"))]
+      (is (= 400 (status resp)))))
+
+  (testing "Year is missing"
+    (let [resp (handler (get-req "/api/habits/logs?month=4" :user-id 1))]
+      (is (= 400 (status resp)))))
+
+  (testing "Month is missing"
+    (let [resp (handler (get-req "/api/habits/logs?year=2026" :user-id 1))]
+      (is (= 400 (status resp)))))
+
+  (testing "Month out of range"
+    (let [resp (handler (get-req "/api/habits/logs?year=2026&month=13" :user-id 1))]
+      (is (= 400 (status resp)))))
+
+  (testing "Month wrong format"
+    (let [resp (handler (get-req "/api/habits/logs?year=2026&month=abc" :user-id 1))]
+      (is (= 400 (status resp)))))
+
+  (testing "Bypass database failure"
+    (with-redefs [habit-logs-dao/get-logs-for-month
+                  (fn [& _] {:success false :error-code :database-error :message "DB down"})]
+      (let [resp (handler (get-req "/api/habits/logs?year=2026&month=4" :user-id 1))]
+        (is (= 500 (status resp)))))))
+
+(deftest upsert-habit-log-test
+  (testing "Upsert valid log"
+    (with-redefs [habit-logs-dao/upsert-log!
+                  (fn [& _] {:success true :data mock-log})]
+      (let [resp (handler (post-req "/api/habits/1/logs"
+                                    {:date "2026-04-13" :completed true :emotion-color "#10B981"}
+                                    :user-id 1))]
+        (is (= 200 (status resp)))
+        (is (= mock-log (parse-body resp))))))
+
+  (testing "Upsert without emotion color uses default"
+    (with-redefs [habit-logs-dao/upsert-log!
+                  (fn [& _] {:success true :data (assoc mock-log :emotion-color "#000000")})]
+      (let [resp (handler (post-req "/api/habits/1/logs"
+                                    {:date "2026-04-13" :completed true}
+                                    :user-id 1))]
+        (is (= 200 (status resp))))))
+
+  (testing "User id is missing"
+    (let [resp (handler (post-req "/api/habits/1/logs"
+                                  {:date "2026-04-13" :completed true}))]
+      (is (= 400 (status resp)))))
+
+  (testing "Habit id wrong format"
+    (let [resp (handler (post-req "/api/habits/abc/logs"
+                                  {:date "2026-04-13" :completed true}
+                                  :user-id 1))]
+      (is (= 400 (status resp)))))
+
+  (testing "Date is missing"
+    (let [resp (handler (post-req "/api/habits/1/logs"
+                                  {:completed true}
+                                  :user-id 1))]
+      (is (= 400 (status resp)))))
+
+  (testing "Completed is missing"
+    (let [resp (handler (post-req "/api/habits/1/logs"
+                                  {:date "2026-04-13"}
+                                  :user-id 1))]
+      (is (= 400 (status resp)))))
+
+  (testing "Habit not found or access denied"
+    (with-redefs [habit-logs-dao/upsert-log!
+                  (fn [& _] {:success false :error-code :not-found
+                             :message "Habit not found or access denied"
+                             :details {:habit-id 1}})]
+      (let [resp (handler (post-req "/api/habits/1/logs"
+                                    {:date "2026-04-13" :completed true}
+                                    :user-id 1))]
+        (is (= 404 (status resp))))))
+
+  (testing "Bypass database failure"
+    (with-redefs [habit-logs-dao/upsert-log!
+                  (fn [& _] {:success false :error-code :database-error :message "DB down"})]
+      (let [resp (handler (post-req "/api/habits/1/logs"
+                                    {:date "2026-04-13" :completed true}
+                                    :user-id 1))]
+        (is (= 500 (status resp)))))))
