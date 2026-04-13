@@ -125,11 +125,12 @@
 (defn habits-page []
   (r/with-let [_ (api/fetch-habits!)]
               [:div.flex.gap-6.items-start
-               [:div.w-80.flex-shrink-0.rounded-xl.p-4
+               [:div.w-180.flex-shrink-0.rounded-xl.p-4
                 {:style {:background-color "#112240"
                          :border           "1px solid #2d3f5e"}}
                 [:h2.text-xl.font-semibold.mb-3 {:style {:color "#cdd6f4"}} "My Habits"]
                 [add-habit-form]
                 [habits-list]]
                [:div.flex-1
+                {:style {:max-width "400px"}}
                 [calendar/calendar]]]))

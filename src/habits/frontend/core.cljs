@@ -24,7 +24,6 @@
               :color            "#E0E0E0"}}
      (if current-user
        [:div
-        ;; шапка — название и пользователь на одном уровне
         [:div.flex.justify-between.items-center.mb-8
          [:h1.text-3xl.font-bold {:style {:color "#cba6f7"}} "Habits Tracker"]
          [user-panel]]
