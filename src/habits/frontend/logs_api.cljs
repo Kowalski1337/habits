@@ -5,7 +5,7 @@
             [habits.frontend.config :as config]))
 
 (defonce logs-state
-         (r/atom {:logs     {}   ;; {date-str -> [log]}
+         (r/atom {:logs     {}
                   :loading? false
                   :error    nil}))
 
@@ -47,10 +47,12 @@
                                          :emotion-color emotion-color}))})
       (.then http/check-response!)
       (.then (fn [log]
-               (let [clean-log (js->clj log :keywordize-keys true)
-                     date      (:date clean-log)]
-                 (swap! logs-state update-in [:logs date]
+               (let [clean-log    (js->clj log :keywordize-keys true)
+                     log-date     (:date clean-log)
+                     log-habit-id (:habit-id clean-log)]
+                 (swap! logs-state update-in [:logs log-date]
                         (fn [day-logs]
-                          (let [existing (filterv #(not= (:habit-id %) habit-id) (or day-logs []))]
+                          (let [existing (filterv #(not= (:habit-id %) log-habit-id)
+                                                  (or day-logs []))]
                             (conj existing clean-log)))))))
       (.catch handle-error!)))
